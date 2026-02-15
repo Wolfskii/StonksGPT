@@ -7,7 +7,9 @@
   let loading = $state(true);
   let error = $state(null);
   let viewingRunId = $state(null);
+  let viewingRun = $state(null);
   let viewingRec = $state(null);
+  let promptOpen = $state(false);
   let runToDelete = $state(null);
   let deleting = $state(false);
 
@@ -26,7 +28,9 @@
 
   async function viewRun(run) {
     viewingRunId = run.id;
+    viewingRun = run;
     viewingRec = null;
+    promptOpen = false;
     try {
       viewingRec = await api.getRecommendationByRunId(run.id);
     } catch {
@@ -36,8 +40,15 @@
 
   function closeView() {
     viewingRunId = null;
+    viewingRun = null;
     viewingRec = null;
+    promptOpen = false;
   }
+
+  const snap = $derived(viewingRun?.inputSnapshot);
+  const riskLevel = $derived(snap?.riskLevel);
+  const promptText = $derived(snap?.promptHumanReadable);
+  const newsItems = $derived(Array.isArray(snap?.newsItems) ? snap.newsItems : []);
 
   function openConfirmRemove(run) {
     runToDelete = run;
@@ -82,6 +93,7 @@
         <tr>
           <th>{t('history.date')}</th>
           <th>{t('history.status')}</th>
+          <th>{t('history.riskLevel')}</th>
           <th></th>
           <th></th>
         </tr>
@@ -90,7 +102,8 @@
         {#each runs as run (run.id)}
           <tr>
             <td>{run.createdAt ? new Date(run.createdAt).toLocaleString() : '—'}</td>
-            <td><span class="status">{run.status}</span></td>
+            <td><span class="status">{run.status ? t('history.status' + run.status.charAt(0).toUpperCase() + run.status.slice(1)) : run.status}</span></td>
+            <td>{run.inputSnapshot?.riskLevel != null ? run.inputSnapshot.riskLevel : '—'}</td>
             <td>
               <button type="button" class="link" onclick={() => viewRun(run)}>
                 {t('history.view')}
@@ -112,10 +125,42 @@
   <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-content">
       <h3>{t('dashboard.latestRecommendation')} — {t('history.runNumber')}{viewingRunId}</h3>
+      {#if riskLevel != null}
+        <p class="run-meta"><strong>{t('history.riskLevel')}:</strong> {riskLevel} — {t('dashboard.risk' + riskLevel)}</p>
+      {/if}
       <div class="recommendation">
         {#each getRecommendationLines(stripRecommendationMarkdown($locale === 'sv' && viewingRec.fullOutputSv ? viewingRec.fullOutputSv : viewingRec.fullOutput)) as item, i (i)}
           <div class="rec-line {item.type}" class:rec-list-item={item.isList}>{item.line}</div>
         {/each}
+      </div>
+      {#if promptText}
+        <div class="run-context">
+          <button type="button" class="context-toggle" onclick={() => promptOpen = !promptOpen} aria-expanded={promptOpen}>
+            {t('history.promptUsed')} — {promptOpen ? t('history.hidePrompt') : t('history.showPrompt')}
+          </button>
+          {#if promptOpen}
+            <pre class="prompt-text">{promptText}</pre>
+          {/if}
+        </div>
+      {/if}
+      <div class="run-context">
+        <strong>{t('history.newsUsed')}:</strong>
+        {#if newsItems.length === 0}
+          <span class="muted">{t('history.noNews')}</span>
+        {:else}
+          <ul class="news-list">
+            {#each newsItems as item (item.title)}
+              <li>
+                {#if item.url}
+                  <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title}</a>
+                {:else}
+                  {item.title}
+                {/if}
+                {#if item.source}<span class="news-source"> ({item.source})</span>{/if}
+              </li>
+            {/each}
+          </ul>
+        {/if}
       </div>
       <button type="button" onclick={closeView}>{t('common.back')}</button>
     </div>
@@ -196,6 +241,30 @@
     z-index: 10;
     padding: 1rem;
   }
+  .run-meta { font-size: 0.9rem; color: #555; margin: 0 0 0.75rem 0; }
+  .run-context { margin-top: 1rem; font-size: 0.9rem; }
+  .context-toggle {
+    background: none;
+    border: none;
+    color: var(--accent, #06c);
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+    font-size: 0.9rem;
+  }
+  .prompt-text {
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    background: #f5f5f5;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    font-size: 0.8rem;
+    max-height: 12rem;
+    overflow-y: auto;
+  }
+  .news-list { margin: 0.25rem 0 0 0; padding-left: 1.25rem; }
+  .news-list li { margin-bottom: 0.25rem; }
+  .news-source { color: #666; font-size: 0.85em; }
   .modal-content {
     background: #fff;
     border-radius: 8px;

@@ -71,3 +71,29 @@ export async function searchFinnhubSymbols(q: string): Promise<FinnhubSearchResu
   });
   return result ?? [];
 }
+
+export type FinnhubNewsItem = {
+  title: string;
+  url?: string;
+  source?: string;
+  snippet?: string;
+};
+
+/** General market news (category=general). Returns up to 5 items. */
+export async function getMarketNews(): Promise<FinnhubNewsItem[]> {
+  if (!env.FINNHUB_API_KEY?.trim()) return [];
+  const result = await queue.add(async (): Promise<FinnhubNewsItem[]> => {
+    const url = `${BASE}/news?category=general&token=${env.FINNHUB_API_KEY}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = (await res.json()) as Array<Record<string, unknown>>;
+    if (!Array.isArray(data)) return [];
+    return data.slice(0, 5).map((item) => ({
+      title: String(item.headline ?? ""),
+      url: item.url != null ? String(item.url) : undefined,
+      source: item.source != null ? String(item.source) : undefined,
+      snippet: item.summary != null ? String(item.summary).slice(0, 200) : undefined,
+    }));
+  });
+  return result ?? [];
+}

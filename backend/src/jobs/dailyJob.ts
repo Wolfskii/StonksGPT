@@ -3,6 +3,7 @@ import { dailyRuns, recommendations, manualNotes, watchlist } from "../db/schema
 import { desc, eq } from "drizzle-orm";
 import { getQuotes } from "../services/marketDataRouter.js";
 import { generateRecommendation } from "../services/ai.js";
+import { getMarketNews } from "../services/finnhub.js";
 import {
   getSuggestedMarkets,
   getSuggestedSymbolsForJob,
@@ -55,6 +56,18 @@ export async function runDailyJob(riskLevel?: number): Promise<{ ok: true } | { 
     const quotes = await getQuotes(symbolsForQuotes);
     const quoteMap = new Map(quotes.map((q) => [q.symbol.toUpperCase(), q]));
     const suggestedMarkets = getSuggestedMarkets();
+
+    let newsItems: Array<{ title: string; url?: string; source?: string; snippet?: string }> = [];
+    try {
+      newsItems = await getMarketNews();
+    } catch {
+      // Non-fatal: continue without news
+    }
+
+    const newsLines =
+      newsItems.length > 0
+        ? newsItems.map((n) => `- ${n.title}${n.source ? ` (${n.source})` : ""}`).join("\n")
+        : "(No recent market news fetched)";
 
     const quoteLines =
       quotes.length > 0
@@ -114,7 +127,10 @@ ${recentRecText}
 User's manual notes (for context):
 ${notesText}
 
-Based on the quotes and suggested markets above, provide a concise daily recommendation: which broad markets or symbols to consider buying, holding, or avoiding, and brief reasoning. You can recommend e.g. S&P 500, World, Europe, Sweden, or emerging markets by name. If the user's watchlist is empty, still give recommendations using the suggested markets. Do not add a disclaimer at the end (the app already shows one at the bottom of the page).
+Recent market headlines (for context):
+${newsLines}
+
+Based on the quotes, suggested markets, and headlines above, provide a concise daily recommendation: which broad markets or symbols to consider buying, holding, or avoiding, and brief reasoning. You can recommend e.g. S&P 500, World, Europe, Sweden, or emerging markets by name. If the user's watchlist is empty, still give recommendations using the suggested markets. Do not add a disclaimer at the end (the app already shows one at the bottom of the page).
 
 IMPORTANT – output in two languages: First write the full recommendation in English. Then on a new line write exactly: ---SWEDISH--- Then write the exact same recommendation in Swedish (Svenska). The app will show one or the other based on the user's language setting.`;
 
@@ -140,6 +156,8 @@ IMPORTANT – output in two languages: First write the full recommendation in En
           symbols: symbolsForQuotes.map((s) => s.symbol),
           date: dateStr,
           riskLevel: risk,
+          promptHumanReadable: prompt,
+          newsItems,
         },
       })
       .where(eq(dailyRuns.id, run.id));
@@ -147,11 +165,25 @@ IMPORTANT – output in two languages: First write the full recommendation in En
     return { ok: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    // On error we may not have built prompt/news; fetch news for snapshot if we have none
+    let errorNews: Array<{ title: string; url?: string; source?: string; snippet?: string }> = [];
+    try {
+      errorNews = await getMarketNews();
+    } catch {
+      // ignore
+    }
     await db
       .update(dailyRuns)
       .set({
         status: "error",
-        inputSnapshot: { symbols: [], date: dateStr, error: message, riskLevel: risk },
+        inputSnapshot: {
+          symbols: [],
+          date: dateStr,
+          error: message,
+          riskLevel: risk,
+          promptHumanReadable: undefined,
+          newsItems: errorNews,
+        },
       })
       .where(eq(dailyRuns.id, run.id));
     return { ok: false, error: message };

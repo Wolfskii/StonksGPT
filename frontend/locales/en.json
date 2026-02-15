@@ -38,7 +38,16 @@
     "runNumber": "Run #",
     "empty": "No runs yet.",
     "confirmRemoveTitle": "Remove this run?",
-    "confirmRemoveMessage": "This will permanently remove this run and its recommendation. You cannot undo this."
+    "confirmRemoveMessage": "This will permanently remove this run and its recommendation. You cannot undo this.",
+    "riskLevel": "Risk level",
+    "promptUsed": "Prompt used",
+    "newsUsed": "News used",
+    "noNews": "No news items used.",
+    "showPrompt": "Show prompt",
+    "hidePrompt": "Hide prompt",
+    "statusSuccess": "Success",
+    "statusError": "Error",
+    "statusRunning": "Running"
   },
   "watchlist": {
     "title": "Watchlist",

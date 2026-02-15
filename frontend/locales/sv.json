@@ -38,7 +38,16 @@
     "runNumber": "Körning #",
     "empty": "Inga körningar än.",
     "confirmRemoveTitle": "Ta bort denna körning?",
-    "confirmRemoveMessage": "Rekommendationen för denna körning raderas permanent. Åtgärden kan inte ångras."
+    "confirmRemoveMessage": "Rekommendationen för denna körning raderas permanent. Åtgärden kan inte ångras.",
+    "riskLevel": "Risknivå",
+    "promptUsed": "Använd prompt",
+    "newsUsed": "Nyheter använda",
+    "noNews": "Inga nyheter använda.",
+    "showPrompt": "Visa prompt",
+    "hidePrompt": "Dölj prompt",
+    "statusSuccess": "Lyckades",
+    "statusError": "Fel",
+    "statusRunning": "Körs"
   },
   "watchlist": {
     "title": "Bevakningslista",

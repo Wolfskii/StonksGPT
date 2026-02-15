@@ -25,7 +25,14 @@ export const manualNotes = pgTable("manual_notes", {
 export const dailyRuns = pgTable("daily_runs", {
   id: serial("id").primaryKey(),
   status: text("status").$type<"running" | "success" | "error">().notNull(),
-  inputSnapshot: jsonb("input_snapshot").$type<{ symbols: string[]; date: string; error?: string; riskLevel?: number }>(),
+  inputSnapshot: jsonb("input_snapshot").$type<{
+    symbols: string[];
+    date: string;
+    error?: string;
+    riskLevel?: number;
+    promptHumanReadable?: string;
+    newsItems?: Array<{ title: string; url?: string; source?: string; snippet?: string }>;
+  }>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
