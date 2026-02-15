@@ -12,7 +12,7 @@
   "dashboard": {
     "title": "Dashboard",
     "latestRecommendation": "Latest recommendation",
-    "noRecommendation": "No recommendation yet. Run the daily job or add a watchlist and trigger it.",
+    "noRecommendation": "No recommendation yet. Run the daily job to get suggestions (S&P 500, World, Europe, Sweden, etc.) even with an empty watchlist.",
     "recentRuns": "Recent runs",
     "runJob": "Run daily job"
   },
@@ -28,14 +28,20 @@
     "date": "Date",
     "status": "Status",
     "view": "View",
-    "empty": "No runs yet."
+    "remove": "Remove",
+    "empty": "No runs yet.",
+    "confirmRemoveTitle": "Remove this run?",
+    "confirmRemoveMessage": "This will permanently remove this run and its recommendation. You cannot undo this."
   },
   "watchlist": {
     "title": "Watchlist",
     "symbol": "Symbol",
     "type": "Type",
     "empty": "No symbols in watchlist.",
-    "add": "Add symbol"
+    "add": "Add symbol",
+    "suggestedMarkets": "Suggested markets & funds",
+    "addMarket": "Add",
+    "yourWatchlist": "Your watchlist"
   },
   "common": {
     "loading": "Loading…",

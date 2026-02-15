@@ -135,6 +135,19 @@ app.get("/api/runs", async (_req, res) => {
   }
 });
 
+/** Delete a run and its recommendation (history item). */
+app.delete("/api/runs/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid run id" });
+    await db.delete(recommendations).where(eq(recommendations.runId, id));
+    await db.delete(dailyRuns).where(eq(dailyRuns.id, id));
+    return res.status(204).send();
+  } catch (e) {
+    res.status(500).json({ error: toErrorMessage(e) });
+  }
+});
+
 /** Trigger daily job. Without API keys we store a placeholder run + recommendation. */
 app.post("/api/jobs/daily", async (_req, res) => {
   try {

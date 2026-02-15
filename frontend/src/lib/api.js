@@ -54,6 +54,13 @@ export async function getRuns() {
   return api("/api/runs");
 }
 
+export async function deleteRun(runId) {
+  const res = await fetch(`${base}/api/runs/${encodeURIComponent(runId)}`, { method: "DELETE" });
+  if (res.status === 204) return;
+  const data = await res.json().catch(() => ({}));
+  throw new Error(data.error || data.message || res.statusText);
+}
+
 export async function runDailyJob() {
   return api("/api/jobs/daily", { method: "POST" });
 }

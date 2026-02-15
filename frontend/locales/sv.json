@@ -12,7 +12,7 @@
   "dashboard": {
     "title": "Instrumentpanel",
     "latestRecommendation": "Senaste rekommendation",
-    "noRecommendation": "Ingen rekommendation än. Kör dagens jobb eller lägg till en bevakningslista och trigga det.",
+    "noRecommendation": "Ingen rekommendation än. Kör dagens jobb för att få förslag (t.ex. S&P 500, världen, Europa, Sverige) även med tom bevakningslista.",
     "recentRuns": "Senaste körningar",
     "runJob": "Kör dagens jobb"
   },
@@ -28,14 +28,20 @@
     "date": "Datum",
     "status": "Status",
     "view": "Visa",
-    "empty": "Inga körningar än."
+    "remove": "Ta bort",
+    "empty": "Inga körningar än.",
+    "confirmRemoveTitle": "Ta bort denna körning?",
+    "confirmRemoveMessage": "Rekommendationen för denna körning raderas permanent. Åtgärden kan inte ångras."
   },
   "watchlist": {
     "title": "Bevakningslista",
     "symbol": "Symbol",
     "type": "Typ",
     "empty": "Inga symboler i bevakningslistan.",
-    "add": "Lägg till symbol"
+    "add": "Lägg till symbol",
+    "suggestedMarkets": "Föreslagna marknader och fonder",
+    "addMarket": "Lägg till",
+    "yourWatchlist": "Din bevakningslista"
   },
   "common": {
     "loading": "Laddar…",

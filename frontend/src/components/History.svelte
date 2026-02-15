@@ -7,6 +7,8 @@
   let error = $state(null);
   let viewingRunId = $state(null);
   let viewingRec = $state(null);
+  let runToDelete = $state(null);
+  let deleting = $state(false);
 
   async function load() {
     loading = true;
@@ -36,6 +38,29 @@
     viewingRec = null;
   }
 
+  function openConfirmRemove(run) {
+    runToDelete = run;
+  }
+
+  function closeConfirmRemove() {
+    if (!deleting) runToDelete = null;
+  }
+
+  async function confirmRemove() {
+    if (!runToDelete) return;
+    deleting = true;
+    error = null;
+    try {
+      await api.deleteRun(runToDelete.id);
+      runToDelete = null;
+      await load();
+    } catch (e) {
+      error = e?.message || String(e);
+    } finally {
+      deleting = false;
+    }
+  }
+
   $effect(() => {
     load();
   });
@@ -57,6 +82,7 @@
           <th>{t('history.date')}</th>
           <th>{t('history.status')}</th>
           <th></th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -67,6 +93,11 @@
             <td>
               <button type="button" class="link" onclick={() => viewRun(run)}>
                 {t('history.view')}
+              </button>
+            </td>
+            <td>
+              <button type="button" class="link link-danger" onclick={() => openConfirmRemove(run)}>
+                {t('history.remove')}
               </button>
             </td>
           </tr>
@@ -86,6 +117,23 @@
   </div>
 {/if}
 
+{#if runToDelete}
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-remove-title">
+    <div class="modal-content modal-confirm">
+      <h3 id="confirm-remove-title">{t('history.confirmRemoveTitle')}</h3>
+      <p class="confirm-message">{t('history.confirmRemoveMessage')}</p>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick={closeConfirmRemove} disabled={deleting}>
+          {t('common.cancel')}
+        </button>
+        <button type="button" class="btn-remove" onclick={confirmRemove} disabled={deleting}>
+          {deleting ? t('common.loading') : t('history.remove')}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
 <style>
   .history { margin-top: 1rem; }
   .muted { color: #666; }
@@ -100,7 +148,39 @@
     cursor: pointer;
     text-decoration: underline;
     padding: 0;
+    margin-right: 0.75rem;
   }
+  .runs-table .link-danger {
+    color: #c00;
+  }
+  .runs-table .link-danger:hover {
+    color: #a00;
+  }
+  .modal-confirm .confirm-message { margin: 1rem 0; color: #444; }
+  .modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 1rem;
+  }
+  .modal-actions .btn-cancel {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    background: #eee;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  .modal-actions .btn-cancel:disabled { opacity: 0.6; cursor: not-allowed; }
+  .modal-actions .btn-remove {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    background: #c00;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+  }
+  .modal-actions .btn-remove:hover:not(:disabled) { background: #a00; }
+  .modal-actions .btn-remove:disabled { opacity: 0.6; cursor: not-allowed; }
   .modal {
     position: fixed;
     inset: 0;
