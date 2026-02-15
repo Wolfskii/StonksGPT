@@ -59,7 +59,7 @@ app.get("/api/watchlist", async (_req, res) => {
 /** Add a watchlist symbol. Validates symbol exists (quote or search) before adding. */
 app.post("/api/watchlist", async (req, res) => {
   try {
-    const { symbol, type, exchange } = req.body ?? {};
+    const { symbol, type, exchange, displayName } = req.body ?? {};
     const sym = String(symbol ?? "").trim();
     if (!sym) return res.status(400).json({ error: "Symbol is required" });
 
@@ -71,12 +71,14 @@ app.post("/api/watchlist", async (req, res) => {
       });
     }
 
+    const display = displayName != null ? String(displayName).trim() || null : null;
     const [row] = await db
       .insert(watchlist)
       .values({
         symbol: sym,
         type: type === "etf" || type === "fund" ? type : "stock",
         exchange: exchange ? String(exchange).trim() : null,
+        displayName: display,
       })
       .returning();
     res.status(201).json(row);

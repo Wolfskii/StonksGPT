@@ -79,7 +79,7 @@ export type FinnhubNewsItem = {
   snippet?: string;
 };
 
-/** General market news (category=general). Returns up to 5 items. */
+/** General market news (category=general). Returns up to 5 items. Prefer getCompanyNews for relevance. */
 export async function getMarketNews(): Promise<FinnhubNewsItem[]> {
   if (!env.FINNHUB_API_KEY?.trim()) return [];
   const result = await queue.add(async (): Promise<FinnhubNewsItem[]> => {
@@ -89,6 +89,34 @@ export async function getMarketNews(): Promise<FinnhubNewsItem[]> {
     const data = (await res.json()) as Array<Record<string, unknown>>;
     if (!Array.isArray(data)) return [];
     return data.slice(0, 5).map((item) => ({
+      title: String(item.headline ?? ""),
+      url: item.url != null ? String(item.url) : undefined,
+      source: item.source != null ? String(item.source) : undefined,
+      snippet: item.summary != null ? String(item.summary).slice(0, 200) : undefined,
+    }));
+  });
+  return result ?? [];
+}
+
+export type FinnhubCompanyNewsItem = FinnhubNewsItem & { symbol?: string; displayName?: string };
+
+/** Company-specific news for a symbol. from/to in YYYY-MM-DD. Returns up to maxItems (default 2). */
+export async function getCompanyNews(
+  symbol: string,
+  from: string,
+  to: string,
+  maxItems = 2
+): Promise<FinnhubCompanyNewsItem[]> {
+  if (!env.FINNHUB_API_KEY?.trim()) return [];
+  const sym = String(symbol).trim().toUpperCase();
+  if (!sym) return [];
+  const result = await queue.add(async (): Promise<FinnhubCompanyNewsItem[]> => {
+    const url = `${BASE}/company-news?symbol=${encodeURIComponent(sym)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&token=${env.FINNHUB_API_KEY}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = (await res.json()) as Array<Record<string, unknown>>;
+    if (!Array.isArray(data)) return [];
+    return data.slice(0, maxItems).map((item) => ({
       title: String(item.headline ?? ""),
       url: item.url != null ? String(item.url) : undefined,
       source: item.source != null ? String(item.source) : undefined,

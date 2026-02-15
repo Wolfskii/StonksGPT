@@ -1,1 +1,1 @@
-{"version":"7","dialect":"postgresql","entries":[{"idx":0,"version":"7","when":1771164381928,"tag":"0000_regular_forge","breakpoints":true},{"idx":1,"version":"7","when":1771164400000,"tag":"0001_add_full_output_sv","breakpoints":true}]}
+{"version":"7","dialect":"postgresql","entries":[{"idx":0,"version":"7","when":1771164381928,"tag":"0000_regular_forge","breakpoints":true},{"idx":1,"version":"7","when":1771164400000,"tag":"0001_add_full_output_sv","breakpoints":true},{"idx":2,"version":"7","when":1771164500000,"tag":"0002_watchlist_display_name","breakpoints":true}]}

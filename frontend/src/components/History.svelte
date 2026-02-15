@@ -164,8 +164,11 @@
           <span class="muted">{t('history.noNews')}</span>
         {:else}
           <ul class="news-list">
-            {#each newsItems as item (item.title)}
+            {#each newsItems as item (item.title + (item.symbol ?? ''))}
               <li>
+                {#if item.symbol || item.displayName}
+                  <span class="news-symbol">{item.symbol}{#if item.displayName} ({item.displayName}):{:else}: {/if} </span>
+                {/if}
                 {#if item.url}
                   <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title}</a>
                 {:else}
@@ -279,6 +282,7 @@
   }
   .news-list { margin: 0.25rem 0 0 0; padding-left: 1.25rem; }
   .news-list li { margin-bottom: 0.25rem; }
+  .news-symbol { color: #555; font-size: 0.9em; font-weight: 600; }
   .news-source { color: #666; font-size: 0.85em; }
   .modal-content {
     background: #fff;

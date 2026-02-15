@@ -26,8 +26,8 @@
     return m;
   });
 
-  function displayName(item) {
-    const name = suggestedByName.get(String(item.symbol).toUpperCase());
+  function displayLabel(item) {
+    const name = item.displayName ?? suggestedByName.get(String(item.symbol).toUpperCase());
     return name ? `${name} (${item.symbol})` : item.symbol;
   }
 
@@ -76,7 +76,12 @@
     searchResults = [];
     error = null;
     try {
-      await api.addWatchlistSymbol({ symbol: sug.symbol, type, exchange: exchange.trim() || undefined });
+      await api.addWatchlistSymbol({
+        symbol: sug.symbol,
+        type,
+        exchange: exchange.trim() || undefined,
+        displayName: sug.description || undefined,
+      });
       await load();
     } catch (e) {
       error = e?.message || String(e);
@@ -143,6 +148,7 @@
         symbol: market.symbol,
         type: market.type || 'etf',
         exchange: market.exchange || undefined,
+        displayName: market.name || undefined,
       });
       await load();
     } catch (e) {
@@ -286,7 +292,7 @@
       <ul>
         {#each list as item (item.id)}
           <li>
-            <strong>{displayName(item)}</strong>
+            <strong>{displayLabel(item)}</strong>
             <span class="type">{item.type}</span>
             {#if item.exchange}
               <span class="exchange">{item.exchange}</span>
@@ -305,7 +311,7 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="watchlist-confirm-title">
     <div class="modal-content modal-confirm">
       <h3 id="watchlist-confirm-title">{t('watchlist.confirmRemove')}</h3>
-      <p class="confirm-symbol">{displayName(itemToRemove)}</p>
+      <p class="confirm-symbol">{displayLabel(itemToRemove)}</p>
       <div class="modal-actions">
         <button type="button" class="btn-cancel" onclick={closeRemoveConfirm} disabled={removing}>
           {t('common.cancel')}

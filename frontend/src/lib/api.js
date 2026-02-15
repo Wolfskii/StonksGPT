@@ -29,11 +29,16 @@ export async function searchWatchlistSymbols(q) {
   return data;
 }
 
-export async function addWatchlistSymbol({ symbol, type = "stock", exchange }) {
+export async function addWatchlistSymbol({ symbol, type = "stock", exchange, displayName }) {
   const res = await fetch(`${base}/api/watchlist`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ symbol: symbol?.trim(), type, exchange: exchange?.trim() || undefined }),
+    body: JSON.stringify({
+      symbol: symbol?.trim(),
+      type,
+      exchange: exchange?.trim() || undefined,
+      displayName: displayName?.trim() || undefined,
+    }),
   });
   const data = await res.json().catch(() => ({}));
   if (res.ok) return data;

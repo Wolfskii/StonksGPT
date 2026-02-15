@@ -11,7 +11,8 @@ export const watchlist = pgTable("watchlist", {
   id: serial("id").primaryKey(),
   symbol: text("symbol").notNull(),
   type: text("type").$type<"stock" | "etf" | "fund">().default("stock"),
-  exchange: text("exchange"), // e.g. US, LON, ST for router
+  exchange: text("exchange"), // e.g. US, LON, ST – market/region for quotes and news
+  displayName: text("display_name"), // full name e.g. "Netflix Inc" for prompts and UI
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -31,7 +32,14 @@ export const dailyRuns = pgTable("daily_runs", {
     error?: string;
     riskLevel?: number;
     promptHumanReadable?: string;
-    newsItems?: Array<{ title: string; url?: string; source?: string; snippet?: string }>;
+    newsItems?: Array<{
+      title: string;
+      url?: string;
+      source?: string;
+      snippet?: string;
+      symbol?: string;
+      displayName?: string;
+    }>;
   }>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

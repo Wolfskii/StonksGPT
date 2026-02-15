@@ -3,7 +3,8 @@ import { dailyRuns, recommendations, manualNotes, watchlist } from "../db/schema
 import { desc, eq } from "drizzle-orm";
 import { getQuotes } from "../services/marketDataRouter.js";
 import { generateRecommendation } from "../services/ai.js";
-import { getMarketNews } from "../services/finnhub.js";
+import { getCompanyNews } from "../services/finnhub.js";
+import { getYahooFinanceNews, getDagensIndustriNews } from "../services/yahooAndDiNews.js";
 import {
   getSuggestedMarkets,
   getSuggestedSymbolsForJob,
@@ -34,7 +35,11 @@ export async function runDailyJob(riskLevel?: number): Promise<{ ok: true } | { 
 
   try {
     const watchlistRows = await db.select().from(watchlist).orderBy(desc(watchlist.createdAt));
-    const watchlistSymbols = watchlistRows.map((r) => ({ symbol: r.symbol, exchange: r.exchange }));
+    const watchlistSymbols = watchlistRows.map((r) => ({
+      symbol: r.symbol,
+      exchange: r.exchange,
+      displayName: r.displayName ?? undefined,
+    }));
     const suggestedSymbols = getSuggestedSymbolsForJob();
     const seen = new Set<string>();
     const symbolsForQuotes: Array<{ symbol: string; exchange: string | null }> = [];
@@ -42,7 +47,7 @@ export async function runDailyJob(riskLevel?: number): Promise<{ ok: true } | { 
       const key = w.symbol.toUpperCase();
       if (!seen.has(key)) {
         seen.add(key);
-        symbolsForQuotes.push(w);
+        symbolsForQuotes.push({ symbol: w.symbol, exchange: w.exchange });
       }
     }
     for (const s of suggestedSymbols) {
@@ -57,17 +62,75 @@ export async function runDailyJob(riskLevel?: number): Promise<{ ok: true } | { 
     const quoteMap = new Map(quotes.map((q) => [q.symbol.toUpperCase(), q]));
     const suggestedMarkets = getSuggestedMarkets();
 
-    let newsItems: Array<{ title: string; url?: string; source?: string; snippet?: string }> = [];
-    try {
-      newsItems = await getMarketNews();
-    } catch {
-      // Non-fatal: continue without news
+    // Company-specific news for watchlist symbols only (relevant to user's symbols and their market)
+    const toDate = new Date();
+    const fromDate = new Date(toDate);
+    fromDate.setDate(fromDate.getDate() - 7);
+    const fromStr = fromDate.toISOString().slice(0, 10);
+    const toStr = toDate.toISOString().slice(0, 10);
+    const newsItems: Array<{
+      title: string;
+      url?: string;
+      source?: string;
+      snippet?: string;
+      symbol?: string;
+      displayName?: string;
+    }> = [];
+    for (const w of watchlistSymbols) {
+      try {
+        const items = await getCompanyNews(w.symbol, fromStr, toStr, 2);
+        for (const item of items) {
+          newsItems.push({
+            ...item,
+            symbol: w.symbol,
+            displayName: w.displayName,
+          });
+        }
+      } catch {
+        // Skip this symbol's news on failure
+      }
     }
+
+    try {
+      const yahooItems = await getYahooFinanceNews(watchlistSymbols, 12);
+      for (const item of yahooItems) {
+        newsItems.push({ ...item });
+      }
+    } catch {
+      // Non-fatal
+    }
+
+    try {
+      const diItems = await getDagensIndustriNews(6);
+      for (const item of diItems) {
+        newsItems.push({ ...item });
+      }
+    } catch {
+      // Non-fatal
+    }
+
+    const watchlistLines =
+      watchlistSymbols.length > 0
+        ? watchlistSymbols
+            .map(
+              (w) =>
+                `${w.symbol}${w.displayName ? ` (${w.displayName})` : ""}${w.exchange ? `, ${w.exchange}` : ""}`
+            )
+            .join("; ")
+        : "(Watchlist empty)";
 
     const newsLines =
       newsItems.length > 0
-        ? newsItems.map((n) => `- ${n.title}${n.source ? ` (${n.source})` : ""}`).join("\n")
-        : "(No recent market news fetched)";
+        ? newsItems
+            .map((n) => {
+              const label =
+                n.symbol && (n.displayName || n.symbol)
+                  ? `[${n.symbol}${n.displayName ? ` ${n.displayName}` : ""}]: `
+                  : "";
+              return `- ${label}${n.title}${n.source ? ` (${n.source})` : ""}`;
+            })
+            .join("\n")
+        : "(No news fetched for watchlist symbols, Yahoo Finance, or DI.)";
 
     const quoteLines =
       quotes.length > 0
@@ -115,6 +178,8 @@ Today's date: ${dateStr}
 
 User's risk tolerance (1–5, 1=most conservative, 5=most aggressive): ${risk}. ${riskDesc}. Tailor your recommendation to this level: at 1–2 prefer stable, diversified index funds and avoid volatile or single-country bets; at 4–5 you may suggest more growth-oriented or regional tilts while still emphasizing long-term diversification.
 
+User watchlist (symbol, full name, market): ${watchlistLines}
+
 Current quotes for symbols considered (user watchlist + suggested broad markets):
 ${quoteLines}
 
@@ -127,10 +192,10 @@ ${recentRecText}
 User's manual notes (for context):
 ${notesText}
 
-Recent market headlines (for context):
+Recent news: company news for your watchlist symbols, Yahoo Finance headlines for those symbols, and DI (Dagens Industri) Swedish business news. Use for context when relevant:
 ${newsLines}
 
-Based on the quotes, suggested markets, and headlines above, provide a concise daily recommendation: which broad markets or symbols to consider buying, holding, or avoiding, and brief reasoning. You can recommend e.g. S&P 500, World, Europe, Sweden, or emerging markets by name. If the user's watchlist is empty, still give recommendations using the suggested markets. Do not add a disclaimer at the end (the app already shows one at the bottom of the page).
+Based on the quotes, suggested markets, and news above, provide a concise daily recommendation: which broad markets or symbols to consider buying, holding, or avoiding, and brief reasoning. You can recommend e.g. S&P 500, World, Europe, Sweden, or emerging markets by name. If the user's watchlist is empty, still give recommendations using the suggested markets. Do not add a disclaimer at the end (the app already shows one at the bottom of the page).
 
 IMPORTANT – output in two languages: First write the full recommendation in English. Then on a new line write exactly: ---SWEDISH--- Then write the exact same recommendation in Swedish (Svenska). The app will show one or the other based on the user's language setting.`;
 
@@ -165,13 +230,6 @@ IMPORTANT – output in two languages: First write the full recommendation in En
     return { ok: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    // On error we may not have built prompt/news; fetch news for snapshot if we have none
-    let errorNews: Array<{ title: string; url?: string; source?: string; snippet?: string }> = [];
-    try {
-      errorNews = await getMarketNews();
-    } catch {
-      // ignore
-    }
     await db
       .update(dailyRuns)
       .set({
@@ -182,7 +240,7 @@ IMPORTANT – output in two languages: First write the full recommendation in En
           error: message,
           riskLevel: risk,
           promptHumanReadable: undefined,
-          newsItems: errorNews,
+          newsItems: [],
         },
       })
       .where(eq(dailyRuns.id, run.id));
