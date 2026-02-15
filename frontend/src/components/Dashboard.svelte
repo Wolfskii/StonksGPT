@@ -1,6 +1,6 @@
 <script>
   import { t, locale } from '$lib/i18n/index.js';
-  import { stripRecommendationMarkdown, getRecommendationLines } from '$lib/stripMarkdown.js';
+  import { stripRecommendationMarkdown, getRecommendationSections } from '$lib/stripMarkdown.js';
   import { getRiskFromStorage, setRiskInStorage, RISK_LEVELS } from '$lib/risk.js';
   import * as api from '$lib/api.js';
 
@@ -14,7 +14,7 @@
     const raw = ($locale === 'sv' && latest?.fullOutputSv) ? latest.fullOutputSv : (latest?.fullOutput ?? '');
     return stripRecommendationMarkdown(raw);
   });
-  const recommendationLines = $derived.by(() => getRecommendationLines(recommendationText));
+  const recommendationSections = $derived.by(() => getRecommendationSections(recommendationText));
   const hasRecommendation = $derived.by(() => {
     if (!latest) return false;
     return Boolean(latest.fullOutput || latest.fullOutputSv);
@@ -104,8 +104,15 @@
           <p class="run-meta"><strong>{t('history.riskLevel')}:</strong> {runRiskLevel} — {t('dashboard.risk' + runRiskLevel)}</p>
         {/if}
         <div class="recommendation">
-          {#each recommendationLines as item, i (i)}
-            <div class="rec-line {item.type}" class:rec-list-item={item.isList}>{item.line}</div>
+          {#each recommendationSections as section, idx (section.type + String(idx))}
+            {#if idx > 0}
+              <div class="rec-divider" aria-hidden="true"></div>
+            {/if}
+            <div class="rec-section rec-section-{section.type}">
+              {#each section.lines as item (item.line)}
+                <div class="rec-line {section.type}" class:rec-list-item={item.isList}>{item.line}</div>
+              {/each}
+            </div>
           {/each}
         </div>
         {#if promptText}
@@ -191,8 +198,11 @@
     border-radius: 2px;
     transform: translateY(-50%);
     pointer-events: none;
+    z-index: 0;
   }
   .risk-stop {
+    position: relative;
+    z-index: 1;
     flex: 1;
     display: flex;
     align-items: center;
@@ -250,14 +260,25 @@
     max-height: 20rem;
     overflow-y: auto;
   }
+  .rec-divider {
+    border: none;
+    height: 1px;
+    margin: 1rem 0;
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.12), transparent);
+  }
+  .rec-section { margin: 0; }
+  .rec-section + .rec-divider { margin-top: 0.5rem; }
+  .rec-section-positive { border-left: 3px solid #0a6b0a; padding-left: 0.75rem; margin-left: 2px; }
+  .rec-section-negative { border-left: 3px solid #c00; padding-left: 0.75rem; margin-left: 2px; }
+  .rec-section-neutral { border-left: 3px solid #666; padding-left: 0.75rem; margin-left: 2px; }
   .rec-line {
     line-height: 1.65;
     margin-bottom: 0.5em;
-    color: #333;
+    color: inherit;
   }
-  .rec-line.positive { color: #0a6b0a; }
-  .rec-line.negative { color: #c00; }
-  .rec-line.neutral { color: #333; }
+  .rec-section-positive .rec-line { color: #0a6b0a; }
+  .rec-section-negative .rec-line { color: #c00; }
+  .rec-section-neutral .rec-line { color: #333; }
   .rec-line.rec-list-item { padding-left: 1.25rem; }
   .actions { margin-bottom: 1rem; }
   .actions button {

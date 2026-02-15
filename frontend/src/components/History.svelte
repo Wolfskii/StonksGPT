@@ -1,6 +1,6 @@
 <script>
   import { t, locale } from '$lib/i18n/index.js';
-  import { stripRecommendationMarkdown, getRecommendationLines } from '$lib/stripMarkdown.js';
+  import { stripRecommendationMarkdown, getRecommendationSections } from '$lib/stripMarkdown.js';
   import * as api from '$lib/api.js';
 
   let runs = $state([]);
@@ -49,6 +49,14 @@
   const riskLevel = $derived(snap?.riskLevel);
   const promptText = $derived(snap?.promptHumanReadable);
   const newsItems = $derived(Array.isArray(snap?.newsItems) ? snap.newsItems : []);
+  const viewingRecText = $derived(
+    viewingRec
+      ? stripRecommendationMarkdown(
+          $locale === 'sv' && viewingRec.fullOutputSv ? viewingRec.fullOutputSv : viewingRec.fullOutput
+        )
+      : ''
+  );
+  const viewingSections = $derived(getRecommendationSections(viewingRecText));
 
   function openConfirmRemove(run) {
     runToDelete = run;
@@ -129,8 +137,15 @@
         <p class="run-meta"><strong>{t('history.riskLevel')}:</strong> {riskLevel} — {t('dashboard.risk' + riskLevel)}</p>
       {/if}
       <div class="recommendation">
-        {#each getRecommendationLines(stripRecommendationMarkdown($locale === 'sv' && viewingRec.fullOutputSv ? viewingRec.fullOutputSv : viewingRec.fullOutput)) as item, i (i)}
-          <div class="rec-line {item.type}" class:rec-list-item={item.isList}>{item.line}</div>
+        {#each viewingSections as section, idx (section.type + String(idx))}
+          {#if idx > 0}
+            <div class="rec-divider" aria-hidden="true"></div>
+          {/if}
+          <div class="rec-section rec-section-{section.type}">
+            {#each section.lines as item (item.line)}
+              <div class="rec-line {section.type}" class:rec-list-item={item.isList}>{item.line}</div>
+            {/each}
+          </div>
         {/each}
       </div>
       {#if promptText}
@@ -274,6 +289,16 @@
     overflow: auto;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   }
+  .rec-divider {
+    border: none;
+    height: 1px;
+    margin: 1rem 0;
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.12), transparent);
+  }
+  .rec-section { margin: 0; }
+  .rec-section-positive { border-left: 3px solid #0a6b0a; padding-left: 0.75rem; margin-left: 2px; }
+  .rec-section-negative { border-left: 3px solid #c00; padding-left: 0.75rem; margin-left: 2px; }
+  .rec-section-neutral { border-left: 3px solid #666; padding-left: 0.75rem; margin-left: 2px; }
   .modal-content .recommendation {
     font-size: 0.95rem;
     margin: 1rem 0;
@@ -283,11 +308,11 @@
   .modal-content .rec-line {
     line-height: 1.65;
     margin-bottom: 0.5em;
-    color: #333;
+    color: inherit;
   }
-  .modal-content .rec-line.positive { color: #0a6b0a; }
-  .modal-content .rec-line.negative { color: #c00; }
-  .modal-content .rec-line.neutral { color: #333; }
+  .modal-content .rec-section-positive .rec-line { color: #0a6b0a; }
+  .modal-content .rec-section-negative .rec-line { color: #c00; }
+  .modal-content .rec-section-neutral .rec-line { color: #333; }
   .modal-content .rec-line.rec-list-item { padding-left: 1.25rem; }
   .modal-content button {
     padding: 0.5rem 1rem;

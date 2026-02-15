@@ -31,7 +31,9 @@ export function stripRecommendationMarkdown(text) {
   if (typeof text !== 'string') return '';
   let out = stripDisclaimerBlock(text);
   out = out
-    .replace(/\*\*/g, '') // bold
+    .replace(/\*\*/g, '') // bold: **text** → text
+    .replace(/\*([^*\n]+)\*/g, '$1') // italic / parenthetical: *text* → text (e.g. *(liten ökning)*)
+    .replace(/_([^_\n]+)_/g, '$1') // underscore emphasis: _text_ → text
     .replace(/(^|\n)\s*#{1,6}\s*/g, '$1') // headings: remove # ## ### etc
     .replace(/(^|\n)\s*-\s+/g, '$1• '); // list: - item → • item
   // Collapse 3+ newlines to 2
@@ -58,4 +60,23 @@ export function getRecommendationLines(text) {
     else if (NEGATIVE_KEYWORDS.test(lower)) type = 'negative';
     return { line, type, isList };
   });
+}
+
+/**
+ * Group recommendation lines by type for sectioned display (positive, negative, neutral) with dividers.
+ * @param {string} text - Already stripped (plain) recommendation text
+ * @returns {Array<{ type: 'positive'|'negative'|'neutral', lines: Array<{ line: string, isList: boolean }> }>}
+ *   Only includes sections that have at least one line; order is positive → negative → neutral.
+ */
+export function getRecommendationSections(text) {
+  const items = getRecommendationLines(text);
+  const byType = { positive: [], negative: [], neutral: [] };
+  for (const { line, type, isList } of items) {
+    byType[type].push({ line, isList });
+  }
+  const sections = [];
+  if (byType.positive.length) sections.push({ type: 'positive', lines: byType.positive });
+  if (byType.negative.length) sections.push({ type: 'negative', lines: byType.negative });
+  if (byType.neutral.length) sections.push({ type: 'neutral', lines: byType.neutral });
+  return sections;
 }
