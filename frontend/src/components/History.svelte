@@ -1,5 +1,6 @@
 <script>
-  import { t } from '$lib/i18n/index.js';
+  import { t, locale } from '$lib/i18n/index.js';
+  import { stripRecommendationMarkdown } from '$lib/stripMarkdown.js';
   import * as api from '$lib/api.js';
 
   let runs = $state([]);
@@ -110,8 +111,8 @@
 {#if viewingRunId && viewingRec}
   <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-content">
-      <h3>{t('dashboard.latestRecommendation')} — Run #{viewingRunId}</h3>
-      <div class="recommendation">{viewingRec.fullOutput}</div>
+      <h3>{t('dashboard.latestRecommendation')} — {t('history.runNumber')}{viewingRunId}</h3>
+      <div class="recommendation">{stripRecommendationMarkdown($locale === 'sv' && viewingRec.fullOutputSv ? viewingRec.fullOutputSv : viewingRec.fullOutput)}</div>
       <button type="button" onclick={closeView}>{t('common.back')}</button>
     </div>
   </div>

@@ -43,3 +43,31 @@ export async function getFinnhubQuote(symbol: string): Promise<FinnhubQuote | nu
 export function getFinnhubMaxSymbols(): number {
   return FINNHUB_MAX_SYMBOLS;
 }
+
+export type FinnhubSearchResult = {
+  symbol: string;
+  displaySymbol: string;
+  description: string;
+  type: string;
+};
+
+export async function searchFinnhubSymbols(q: string): Promise<FinnhubSearchResult[]> {
+  if (!env.FINNHUB_API_KEY?.trim()) return [];
+  const query = String(q).trim();
+  if (!query || query.length < 2) return [];
+
+  const result = await queue.add(async (): Promise<FinnhubSearchResult[]> => {
+    const url = `${BASE}/search?q=${encodeURIComponent(query)}&token=${env.FINNHUB_API_KEY}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = (await res.json()) as { count?: number; result?: Array<Record<string, unknown>> };
+    const list = data.result ?? [];
+    return list.slice(0, 8).map((r) => ({
+      symbol: String(r.symbol ?? r.displaySymbol ?? ""),
+      displaySymbol: String(r.displaySymbol ?? r.symbol ?? ""),
+      description: String(r.description ?? ""),
+      type: String(r.type ?? ""),
+    }));
+  });
+  return result ?? [];
+}

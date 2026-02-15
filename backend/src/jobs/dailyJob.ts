@@ -102,13 +102,21 @@ ${recentRecText}
 User's manual notes (for context):
 ${notesText}
 
-Based on the quotes and suggested markets above, provide a concise daily recommendation: which broad markets or symbols to consider buying, holding, or avoiding, and brief reasoning. You can recommend e.g. S&P 500, World, Europe, Sweden, or emerging markets by name. If the user's watchlist is empty, still give recommendations using the suggested markets. End with a clear disclaimer that this is not financial advice.`;
+Based on the quotes and suggested markets above, provide a concise daily recommendation: which broad markets or symbols to consider buying, holding, or avoiding, and brief reasoning. You can recommend e.g. S&P 500, World, Europe, Sweden, or emerging markets by name. If the user's watchlist is empty, still give recommendations using the suggested markets. Do not add a disclaimer at the end (the app already shows one at the bottom of the page).
 
-    const fullOutput = await generateRecommendation(prompt);
+IMPORTANT – output in two languages: First write the full recommendation in English. Then on a new line write exactly: ---SWEDISH--- Then write the exact same recommendation in Swedish (Svenska). The app will show one or the other based on the user's language setting.`;
+
+    const rawOutput = await generateRecommendation(prompt);
+    const SEP = "---SWEDISH---";
+    const sepIndex = rawOutput.indexOf(SEP);
+    const fullOutput = sepIndex >= 0 ? rawOutput.slice(0, sepIndex).trim() : rawOutput;
+    const fullOutputSv =
+      sepIndex >= 0 ? rawOutput.slice(sepIndex + SEP.length).trim() : null;
 
     await db.insert(recommendations).values({
       runId: run.id,
       fullOutput,
+      fullOutputSv: fullOutputSv || null,
       structuredSummary: null,
     });
 

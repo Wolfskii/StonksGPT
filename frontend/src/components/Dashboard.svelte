@@ -1,9 +1,21 @@
 <script>
-  import { t } from '$lib/i18n/index.js';
+  import { t, locale } from '$lib/i18n/index.js';
+  import { stripRecommendationMarkdown } from '$lib/stripMarkdown.js';
   import * as api from '$lib/api.js';
 
   let latest = $state(null);
   let runs = $state([]);
+
+  const recommendationText = $derived.by(() => {
+    if (!latest) return '';
+    $locale;
+    const raw = ($locale === 'sv' && latest?.fullOutputSv) ? latest.fullOutputSv : (latest?.fullOutput ?? '');
+    return stripRecommendationMarkdown(raw);
+  });
+  const hasRecommendation = $derived.by(() => {
+    if (!latest) return false;
+    return Boolean(latest.fullOutput || latest.fullOutputSv);
+  });
   let loading = $state(true);
   let jobRunning = $state(false);
   let jobError = $state(null);
@@ -52,8 +64,8 @@
   {:else}
     <div class="latest">
       <h3>{t('dashboard.latestRecommendation')}</h3>
-      {#if latest?.fullOutput}
-        <div class="recommendation">{latest.fullOutput}</div>
+      {#if hasRecommendation}
+        <div class="recommendation">{recommendationText}</div>
       {:else}
         <p class="muted">{t('dashboard.noRecommendation')}</p>
       {/if}

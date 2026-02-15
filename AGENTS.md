@@ -25,14 +25,31 @@ Instructions for AI coding agents working on this repo. See [agents.md](https://
 
 ## i18n (internationalization)
 
-- **User-facing strings** must not be hardcoded. Use the app i18n layer and locale files.
-- **Frontend:** Use `t('key')` from `$lib/i18n` (e.g. `t('nav.dashboard')`). Add or update keys in **both**:
-  - `frontend/locales/en.json`
-  - `frontend/locales/sv.json`
-- Keep the same structure in both files; add new keys under the same path (e.g. `"newSection": { "title": "..." }` in en and sv).
-- Supported locales: English (`en`) and Swedish (`sv`) only for now.
-- **Language choice persistence:** The selected locale is saved in **localStorage** (key: `stonksgpt-locale`) when the user changes it, so their choice is kept across sessions. On load, the app uses the saved value if present, otherwise falls back to browser language or default.
-- **Locale switcher UI:** Use a **dropdown/select** (not toggle buttons) with a **flag emoji** next to each language name (e.g. 🇺🇸 English, 🇸🇪 Svenska). Options are defined in `$lib/i18n` as `localeOptions` (code, labelKey, flag).
+Instructions for AI tools and contributors: keep the UI localized and consistent.
+
+### Rules
+
+1. **No hardcoded user-facing strings** in Svelte (or any frontend code). Every label, title, button text, message, and placeholder must use the i18n function.
+2. **Use `t('key')`** from `$lib/i18n`:  
+   `import { t } from '$lib/i18n/index.js';` then e.g. `t('nav.dashboard')`, `t('common.loading')`. Keys are dot-path strings into the locale JSON.
+3. **Add or edit keys in both locale files** with the same structure:
+   - `frontend/locales/en.json`
+   - `frontend/locales/sv.json`  
+   Add the same key path in both; keep section and nesting identical (e.g. `watchlist.yourWatchlist` in en and sv).
+4. **Supported locales:** English (`en`) and Swedish (`sv`) only. Do not add a new locale unless the task explicitly asks for it; when adding one, see `docs/I18N.md`.
+5. **Locale switcher:** The app uses a **dropdown (&lt;select&gt;)** with a **flag emoji** next to the language name (🇺🇸 English, 🇸🇪 Svenska). Options come from `localeOptions` in `$lib/i18n` (code, labelKey, flag). Do not replace this with plain buttons.
+6. **Persistence:** The selected locale is stored in **localStorage** under `stonksgpt-locale`. Initial locale is: saved value → browser language (sv if `navigator.language` starts with `sv`) → default `en`. Do not change this key or the init order without good reason.
+
+### Checklist when adding UI text
+
+- [ ] Added the key to **both** `frontend/locales/en.json` and `frontend/locales/sv.json` in the same place in the tree.
+- [ ] Used `t('section.key')` (or `t('key', params)` if the string has placeholders) in the component; no raw string in the template for that text.
+- [ ] If the string is used in a reactive context (e.g. derived label), the code reads `$locale` so the UI updates when the user changes language.
+
+### Reference
+
+- **Full i18n doc:** `docs/I18N.md` – locale files, `t()` and store usage, adding keys, adding a new locale.
+- **i18n module:** `frontend/src/lib/i18n/index.js` – `t()`, `locale`, `setLocale`, `initI18n`, `localeOptions`, `supportedLocales`.
 
 ## Database
 

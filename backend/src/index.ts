@@ -7,6 +7,8 @@ import { desc, eq } from "drizzle-orm";
 import { runDailyJob } from "./jobs/dailyJob.js";
 import { toErrorMessage } from "./lib/errors.js";
 import { getSuggestedMarkets } from "./config/suggestedMarkets.js";
+import { validateSymbol } from "./services/validateSymbol.js";
+import { searchFinnhubSymbols } from "./services/finnhub.js";
 
 const app = express();
 app.use(cors());
@@ -26,6 +28,24 @@ app.get("/api/suggested-markets", (_req, res) => {
   res.json(getSuggestedMarkets());
 });
 
+/** Search symbols (typeahead). Query after 2s of typing; returns suggestions from Finnhub. */
+app.get("/api/watchlist/search", async (req, res) => {
+  try {
+    const q = String(req.query.q ?? "").trim();
+    if (q.length < 2) return res.json({ suggestions: [] });
+    const results = await searchFinnhubSymbols(q);
+    const suggestions = results.map((r) => ({
+      symbol: r.symbol,
+      description: r.description,
+      type: r.type,
+      displaySymbol: r.displaySymbol,
+    }));
+    return res.json({ suggestions });
+  } catch (e) {
+    res.status(500).json({ error: toErrorMessage(e) });
+  }
+});
+
 /** List watchlist symbols. */
 app.get("/api/watchlist", async (_req, res) => {
   try {
@@ -36,19 +56,42 @@ app.get("/api/watchlist", async (_req, res) => {
   }
 });
 
-/** Add a watchlist symbol. */
+/** Add a watchlist symbol. Validates symbol exists (quote or search) before adding. */
 app.post("/api/watchlist", async (req, res) => {
   try {
     const { symbol, type, exchange } = req.body ?? {};
+    const sym = String(symbol ?? "").trim();
+    if (!sym) return res.status(400).json({ error: "Symbol is required" });
+
+    const validation = await validateSymbol(sym, exchange ? String(exchange).trim() : null);
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: "Symbol not found. Check the spelling or pick a suggestion below.",
+        suggestions: validation.suggestions,
+      });
+    }
+
     const [row] = await db
       .insert(watchlist)
       .values({
-        symbol: String(symbol ?? "").trim() || "?",
+        symbol: sym,
         type: type === "etf" || type === "fund" ? type : "stock",
         exchange: exchange ? String(exchange).trim() : null,
       })
       .returning();
     res.status(201).json(row);
+  } catch (e) {
+    res.status(500).json({ error: toErrorMessage(e) });
+  }
+});
+
+/** Remove a watchlist symbol by id. */
+app.delete("/api/watchlist/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
+    await db.delete(watchlist).where(eq(watchlist.id, id));
+    return res.status(204).send();
   } catch (e) {
     res.status(500).json({ error: toErrorMessage(e) });
   }

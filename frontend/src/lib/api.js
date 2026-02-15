@@ -24,11 +24,29 @@ export async function getWatchlist() {
   return api("/api/watchlist");
 }
 
+export async function searchWatchlistSymbols(q) {
+  const data = await api(`/api/watchlist/search?q=${encodeURIComponent(q)}`);
+  return data;
+}
+
 export async function addWatchlistSymbol({ symbol, type = "stock", exchange }) {
-  return api("/api/watchlist", {
+  const res = await fetch(`${base}/api/watchlist`, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ symbol: symbol?.trim(), type, exchange: exchange?.trim() || undefined }),
   });
+  const data = await res.json().catch(() => ({}));
+  if (res.ok) return data;
+  const err = new Error(data.error || data.message || res.statusText);
+  if (res.status === 400 && Array.isArray(data.suggestions)) err.suggestions = data.suggestions;
+  throw err;
+}
+
+export async function deleteWatchlistItem(id) {
+  const res = await fetch(`${base}/api/watchlist/${encodeURIComponent(id)}`, { method: "DELETE" });
+  if (res.status === 204) return;
+  const data = await res.json().catch(() => ({}));
+  throw new Error(data.error || data.message || res.statusText);
 }
 
 export async function getNotes() {

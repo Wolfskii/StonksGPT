@@ -29,6 +29,7 @@
     "status": "Status",
     "view": "Visa",
     "remove": "Ta bort",
+    "runNumber": "Körning #",
     "empty": "Inga körningar än.",
     "confirmRemoveTitle": "Ta bort denna körning?",
     "confirmRemoveMessage": "Rekommendationen för denna körning raderas permanent. Åtgärden kan inte ångras."
@@ -37,11 +38,20 @@
     "title": "Bevakningslista",
     "symbol": "Symbol",
     "type": "Typ",
+    "typeStock": "Aktie",
+    "typeEtf": "ETF",
+    "typeFund": "Fond",
+    "exchangePlaceholder": "Börs (t.ex. US, LON)",
+    "hint": "Rekommendationer kan inkludera dessa och din bevakningslista även om du inte lägger till något. Du kan fortfarande lägga till symboler manuellt nedan.",
     "empty": "Inga symboler i bevakningslistan.",
     "add": "Lägg till symbol",
     "suggestedMarkets": "Föreslagna marknader och fonder",
     "addMarket": "Lägg till",
-    "yourWatchlist": "Din bevakningslista"
+    "yourWatchlist": "Din bevakningslista",
+    "remove": "Ta bort",
+    "confirmRemove": "Ta bort denna symbol från bevakningslistan?",
+    "symbolNotFound": "Symbolen hittades inte. Kontrollera stavningen eller välj ett förslag nedan.",
+    "didYouMean": "Menade du?"
   },
   "common": {
     "loading": "Laddar…",

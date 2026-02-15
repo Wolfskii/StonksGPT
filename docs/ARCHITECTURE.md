@@ -37,7 +37,7 @@ flowchart LR
 
 - **Repo layout:** Single repo with `/backend` (Node.js API) and `/frontend` (Svelte). Frontend calls backend REST API.
 - **Backend:** Express, REST under `/api/*`, daily job (cron or HTTP-triggered), AI service, market-data router (Finnhub / Alpha Vantage / Swedish fallback), DB, optional MD write.
-- **Frontend:** Svelte (Vite) – dashboard, manual notes form, history.
+- **Frontend:** Svelte (Vite) – dashboard, manual notes form, history; UI is localized (en/sv), see [I18N.md](I18N.md).
 - **Daily pipeline:** Job fetches market data + news, loads manual notes and last N recommendations from DB, builds prompt, calls AI, saves to `daily_runs` + `recommendations` (and optionally writes MD).
 - **Storage:** PostgreSQL for watchlist, manual notes, runs, recommendations (canonical memory). Optional markdown under `backend/memory/daily/` for readability.
 

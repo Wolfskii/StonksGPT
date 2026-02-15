@@ -34,7 +34,8 @@ export const recommendations = pgTable("recommendations", {
   runId: integer("run_id")
     .notNull()
     .references(() => dailyRuns.id),
-  fullOutput: text("full_output").notNull(), // full AI advice/reasoning - source of truth for deploy persistence
+  fullOutput: text("full_output").notNull(), // English – full AI advice/reasoning
+  fullOutputSv: text("full_output_sv"), // Swedish – same recommendation for locale toggle
   structuredSummary: jsonb("structured_summary").$type<
     Array<{ symbol: string; action: string; reasoning: string }>
   >(),

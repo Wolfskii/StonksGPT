@@ -29,6 +29,7 @@
     "status": "Status",
     "view": "View",
     "remove": "Remove",
+    "runNumber": "Run #",
     "empty": "No runs yet.",
     "confirmRemoveTitle": "Remove this run?",
     "confirmRemoveMessage": "This will permanently remove this run and its recommendation. You cannot undo this."
@@ -37,11 +38,20 @@
     "title": "Watchlist",
     "symbol": "Symbol",
     "type": "Type",
+    "typeStock": "Stock",
+    "typeEtf": "ETF",
+    "typeFund": "Fund",
+    "exchangePlaceholder": "Exchange (e.g. US, LON)",
+    "hint": "Recommendations can include these and your watchlist even if you add nothing. You can still add symbols manually below.",
     "empty": "No symbols in watchlist.",
     "add": "Add symbol",
     "suggestedMarkets": "Suggested markets & funds",
     "addMarket": "Add",
-    "yourWatchlist": "Your watchlist"
+    "yourWatchlist": "Your watchlist",
+    "remove": "Remove",
+    "confirmRemove": "Remove this symbol from your watchlist?",
+    "symbolNotFound": "Symbol not found. Check the spelling or pick a suggestion below.",
+    "didYouMean": "Did you mean?"
   },
   "common": {
     "loading": "Loading…",

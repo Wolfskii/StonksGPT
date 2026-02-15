@@ -12,7 +12,7 @@ Daily stock and fund recommendations for long-term investing. The app runs a **d
 ## Stack
 
 - **Backend:** Node.js (Express), PostgreSQL (Drizzle), Finnhub + Alpha Vantage + optional Yahoo .ST for Swedish stocks
-- **Frontend:** Svelte (Vite)
+- **Frontend:** Svelte (Vite), localized (English / Swedish) with persistence in localStorage
 - **Automation:** [Task](https://taskfile.dev/) at repo root for install, dev, build, Docker, and deploy
 
 ## Prerequisites
@@ -73,6 +73,7 @@ Detailed design and onboarding material lives in **`/docs`**:
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** – Architecture diagram, data model, core flows, project layout, Task, Docker
 - **[docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)** – Market data (Finnhub, Alpha Vantage, Swedish fallback), news, API limits
 - **[docs/AI_AND_MCP.md](docs/AI_AND_MCP.md)** – MCP vs universal AI, provider abstraction (OpenAI/Anthropic/Google)
+- **[docs/I18N.md](docs/I18N.md)** – Internationalization (en/sv), locale files, adding strings, locale switcher, persistence
 - **[docs/FUTURE.md](docs/FUTURE.md)** – Future ideas (our own MCP, more news, backup, etc.)
 
 ## Running without API keys
