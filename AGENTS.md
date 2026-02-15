@@ -11,11 +11,11 @@ Instructions for AI coding agents working on this repo. See [agents.md](https://
 ## Setup commands
 
 - Install deps (root + backend + frontend): `task install`
-- Start project (DB, wait, migrate, app): `task run`
-- Dev (backend + frontend, no Docker; use concurrently): `task dev`. Ensure Postgres is running (e.g. `docker compose up -d db`).
+- **Run app for development:** `task run` or `task start` or `task dev` — starts Postgres (Docker), waits for DB, runs migrations, then starts backend + frontend locally (concurrently). One command for full local dev.
 - Build: `task build`
 - CI (npm ci + build): `task ci`
 - DB migrate: `task db:migrate` (run from root; backend uses root `.env`)
+- Run full stack in Docker (db + app container): `task run:docker`
 
 ## Code style and conventions
 
@@ -31,6 +31,8 @@ Instructions for AI coding agents working on this repo. See [agents.md](https://
   - `frontend/locales/sv.json`
 - Keep the same structure in both files; add new keys under the same path (e.g. `"newSection": { "title": "..." }` in en and sv).
 - Supported locales: English (`en`) and Swedish (`sv`) only for now.
+- **Language choice persistence:** The selected locale is saved in **localStorage** (key: `stonksgpt-locale`) when the user changes it, so their choice is kept across sessions. On load, the app uses the saved value if present, otherwise falls back to browser language or default.
+- **Locale switcher UI:** Use a **dropdown/select** (not toggle buttons) with a **flag emoji** next to each language name (e.g. 🇺🇸 English, 🇸🇪 Svenska). Options are defined in `$lib/i18n` as `localeOptions` (code, labelKey, flag).
 
 ## Database
 

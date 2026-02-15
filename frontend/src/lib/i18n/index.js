@@ -1,14 +1,23 @@
 /**
  * Simple i18n: en.json / sv.json; expose t(key) and locale.
  * Use in Svelte: import { t, locale, setLocale } from '$lib/i18n';
+ * Language choice is persisted in localStorage.
  */
 
 import { writable, get } from 'svelte/store';
 import en from '../../../locales/en.json';
 import sv from '../../../locales/sv.json';
 
-const supportedLocales = ['en', 'sv'];
+const LOCAL_STORAGE_KEY = 'stonksgpt-locale';
+
+export const supportedLocales = ['en', 'sv'];
 const defaultLocale = 'en';
+
+/** Options for locale dropdown: code, labelKey for t(), flag emoji */
+export const localeOptions = [
+  { code: 'en', labelKey: 'locale.en', flag: '🇺🇸' },
+  { code: 'sv', labelKey: 'locale.sv', flag: '🇸🇪' },
+];
 
 /** @type {Record<string, Record<string, unknown>>} */
 const messages = { en, sv };
@@ -39,7 +48,7 @@ export function t(key, params = {}) {
 }
 
 /**
- * Set current locale.
+ * Set current locale. Persists to localStorage so choice is kept across sessions.
  * @param {string} loc
  */
 export function setLocale(loc) {
@@ -47,15 +56,27 @@ export function setLocale(loc) {
   locale.set(loc);
   if (typeof document !== 'undefined') {
     document.documentElement.lang = loc;
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, loc);
+    } catch (_) {}
   }
 }
 
 /**
- * Initialize i18n: set locale from param or browser (sv/en).
+ * Initialize i18n: prefer saved locale (localStorage), then param, then browser (sv/en).
  * Call once at app startup.
  * @param {string} [initial]
  */
 export function initI18n(initial) {
-  const loc = initial ?? (typeof navigator !== 'undefined' && navigator.language?.startsWith('sv') ? 'sv' : 'en');
-  setLocale(supportedLocales.includes(loc) ? loc : defaultLocale);
+  let loc = defaultLocale;
+  if (typeof localStorage !== 'undefined') {
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (saved && supportedLocales.includes(saved)) {
+      loc = saved;
+    } else if (typeof navigator !== 'undefined' && navigator.language?.startsWith('sv')) {
+      loc = 'sv';
+    }
+  }
+  if (initial && supportedLocales.includes(initial)) loc = initial;
+  setLocale(loc);
 }

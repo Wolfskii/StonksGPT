@@ -43,7 +43,8 @@
     "save": "Spara",
     "cancel": "Avbryt",
     "delete": "Ta bort",
-    "back": "Tillbaka"
+    "back": "Tillbaka",
+    "language": "Språk"
   },
   "disclaimer": "Rekommendationer är endast till informativa ändamål, inte finansiell rådgivning.",
   "locale": {

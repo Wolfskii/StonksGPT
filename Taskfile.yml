@@ -65,12 +65,12 @@ tasks:
       - npm ci
 
   dev:
-    desc: Run backend and frontend in dev mode (no Docker; ensure Postgres is running)
+    desc: "Start DB (Docker), migrate, then run backend + frontend locally (same as task run)"
     cmds:
-      - npm run dev
+      - task: run
 
   dev:backend:
-    desc: Run backend in dev mode only
+    desc: Run backend in dev mode only (assumes DB is running)
     dir: "{{.BACKEND_DIR}}"
     cmds:
       - npm run dev
@@ -82,15 +82,20 @@ tasks:
       - npm run dev
 
   run:
-    desc: "Start project: bring up DB, run migrations, then start app (all manual steps except install)"
+    desc: "Start DB (Docker only), migrate, then run backend + frontend on host (npm run dev, no app container)"
     cmds:
       - task: run:db
       - task: run:wait-db
       - task: db:migrate
-      - task: run:app
+      - task: run:local
+
+  start:
+    desc: "Alias for task run"
+    cmds:
+      - task: run
 
   run:db:
-    desc: "Start Postgres only"
+    desc: "Start Postgres container only (Docker)"
     cmds:
       - docker compose up -d db
 
@@ -99,9 +104,17 @@ tasks:
     cmds:
       - docker compose run --rm db sh -c 'until pg_isready -h db -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"; do sleep 1; done'
 
-  run:app:
-    desc: "Start app (and ensure full stack is up)"
+  run:local:
+    desc: "Run backend + frontend on host via concurrently (same as old task dev; no Docker app)"
     cmds:
+      - npm run dev
+
+  run:docker:
+    desc: "Start DB + app in Docker (db container + app container); for production-style run"
+    cmds:
+      - task: run:db
+      - task: run:wait-db
+      - task: db:migrate
       - docker compose up -d
 
   build:

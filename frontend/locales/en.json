@@ -43,7 +43,8 @@
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
-    "back": "Back"
+    "back": "Back",
+    "language": "Language"
   },
   "disclaimer": "Recommendations are for informational purposes only, not financial advice.",
   "locale": {
