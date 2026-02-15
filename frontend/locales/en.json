@@ -1,0 +1,53 @@
+{
+  "app": {
+    "name": "StonksGPT",
+    "tagline": "Daily stock and fund recommendations for long-term investing"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "notes": "Notes",
+    "history": "History",
+    "watchlist": "Watchlist"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "latestRecommendation": "Latest recommendation",
+    "noRecommendation": "No recommendation yet. Run the daily job or add a watchlist and trigger it.",
+    "recentRuns": "Recent runs",
+    "runJob": "Run daily job"
+  },
+  "notes": {
+    "title": "Manual notes",
+    "placeholder": "Add context for the AI (e.g. market events, risks, sector news…)",
+    "add": "Add note",
+    "dateOptional": "Date (optional)",
+    "empty": "No notes yet."
+  },
+  "history": {
+    "title": "History",
+    "date": "Date",
+    "status": "Status",
+    "view": "View",
+    "empty": "No runs yet."
+  },
+  "watchlist": {
+    "title": "Watchlist",
+    "symbol": "Symbol",
+    "type": "Type",
+    "empty": "No symbols in watchlist.",
+    "add": "Add symbol"
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "back": "Back"
+  },
+  "disclaimer": "Recommendations are for informational purposes only, not financial advice.",
+  "locale": {
+    "en": "English",
+    "sv": "Svenska"
+  }
+}

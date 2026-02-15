@@ -1,0 +1,53 @@
+{
+  "app": {
+    "name": "StonksGPT",
+    "tagline": "Dagliga aktie- och fondrekommendationer för långsiktig sparande"
+  },
+  "nav": {
+    "dashboard": "Instrumentpanel",
+    "notes": "Anteckningar",
+    "history": "Historik",
+    "watchlist": "Bevakningslista"
+  },
+  "dashboard": {
+    "title": "Instrumentpanel",
+    "latestRecommendation": "Senaste rekommendation",
+    "noRecommendation": "Ingen rekommendation än. Kör dagens jobb eller lägg till en bevakningslista och trigga det.",
+    "recentRuns": "Senaste körningar",
+    "runJob": "Kör dagens jobb"
+  },
+  "notes": {
+    "title": "Manuella anteckningar",
+    "placeholder": "Lägg till kontext till AI (t.ex. marknadshändelser, risker, branschnyheter…)",
+    "add": "Lägg till anteckning",
+    "dateOptional": "Datum (valfritt)",
+    "empty": "Inga anteckningar än."
+  },
+  "history": {
+    "title": "Historik",
+    "date": "Datum",
+    "status": "Status",
+    "view": "Visa",
+    "empty": "Inga körningar än."
+  },
+  "watchlist": {
+    "title": "Bevakningslista",
+    "symbol": "Symbol",
+    "type": "Typ",
+    "empty": "Inga symboler i bevakningslistan.",
+    "add": "Lägg till symbol"
+  },
+  "common": {
+    "loading": "Laddar…",
+    "error": "Något gick fel.",
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "delete": "Ta bort",
+    "back": "Tillbaka"
+  },
+  "disclaimer": "Rekommendationer är endast till informativa ändamål, inte finansiell rådgivning.",
+  "locale": {
+    "en": "English",
+    "sv": "Svenska"
+  }
+}

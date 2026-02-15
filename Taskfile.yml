@@ -1,0 +1,158 @@
+# https://taskfile.dev - Task v3
+version: "3"
+
+vars:
+  BACKEND_DIR: backend
+  FRONTEND_DIR: frontend
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  install:
+    desc: Install dependencies in all Node.js projects (root, backend, frontend)
+    cmds:
+      - task: install:root
+      - task: install:backend
+      - task: install:frontend
+
+  install:root:
+    desc: Install root dependencies
+    cmds:
+      - npm install
+
+  install:backend:
+    desc: Install backend dependencies
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - npm install
+
+  install:frontend:
+    desc: Install frontend dependencies
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm install
+
+  deps:
+    desc: Alias for install
+    cmds:
+      - task: install
+
+  ci:
+    desc: "CI pipeline: install from lockfile (npm ci) then build"
+    cmds:
+      - task: ci:install
+      - task: build
+
+  ci:install:
+    desc: "Install with npm ci in backend and frontend (requires package-lock.json)"
+    cmds:
+      - task: ci:install:backend
+      - task: ci:install:frontend
+
+  ci:install:backend:
+    desc: "Backend: npm ci"
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - npm ci
+
+  ci:install:frontend:
+    desc: "Frontend: npm ci"
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm ci
+
+  dev:
+    desc: Run backend and frontend in dev mode (no Docker; ensure Postgres is running)
+    cmds:
+      - npm run dev
+
+  dev:backend:
+    desc: Run backend in dev mode only
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - npm run dev
+
+  dev:frontend:
+    desc: Run frontend dev server only
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm run dev
+
+  run:
+    desc: "Start project: bring up DB, run migrations, then start app (all manual steps except install)"
+    cmds:
+      - task: run:db
+      - task: run:wait-db
+      - task: db:migrate
+      - task: run:app
+
+  run:db:
+    desc: "Start Postgres only"
+    cmds:
+      - docker compose up -d db
+
+  run:wait-db:
+    desc: "Wait for Postgres to accept connections"
+    cmds:
+      - docker compose run --rm db sh -c 'until pg_isready -h db -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"; do sleep 1; done'
+
+  run:app:
+    desc: "Start app (and ensure full stack is up)"
+    cmds:
+      - docker compose up -d
+
+  build:
+    desc: Build backend and frontend for production
+    cmds:
+      - task: build:backend
+      - task: build:frontend
+
+  build:backend:
+    desc: Build backend for production
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - npm run build
+
+  build:frontend:
+    desc: Build frontend for production
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm run build
+
+  docker:up:
+    desc: Start Docker stack (db + app)
+    cmds:
+      - docker compose up -d
+
+  docker:down:
+    desc: Stop Docker stack
+    cmds:
+      - docker compose down
+
+  docker:build:
+    desc: Build Docker images
+    cmds:
+      - docker compose build
+
+  db:migrate:
+    desc: Run database migrations
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - npm run db:migrate
+
+  db:seed:
+    desc: Seed database (if implemented)
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - npm run db:seed
+
+  deploy:
+    desc: Build and deploy (build images; customize for your Dokploy/server)
+    cmds:
+      - task: build
+      - docker compose build
+    preconditions:
+      - test -f docker-compose.yml
