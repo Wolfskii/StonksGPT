@@ -79,6 +79,9 @@ export async function deleteRun(runId) {
   throw new Error(data.error || data.message || res.statusText);
 }
 
-export async function runDailyJob() {
-  return api("/api/jobs/daily", { method: "POST" });
+export async function runDailyJob(riskLevel) {
+  return api("/api/jobs/daily", {
+    method: "POST",
+    body: JSON.stringify({ riskLevel: riskLevel != null ? Number(riskLevel) : undefined }),
+  });
 }

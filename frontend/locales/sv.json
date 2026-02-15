@@ -14,7 +14,13 @@
     "latestRecommendation": "Senaste rekommendation",
     "noRecommendation": "Ingen rekommendation än. Kör dagens jobb för att få förslag (t.ex. S&P 500, världen, Europa, Sverige) även med tom bevakningslista.",
     "recentRuns": "Senaste körningar",
-    "runJob": "Kör dagens jobb"
+    "runJob": "Kör dagens jobb",
+    "riskLabel": "Risktolerans",
+    "risk1": "Mycket konservativ",
+    "risk2": "Konservativ",
+    "risk3": "Moderat",
+    "risk4": "Tillväxt",
+    "risk5": "Aggressiv"
   },
   "notes": {
     "title": "Manuella anteckningar",

@@ -38,3 +38,24 @@ export function stripRecommendationMarkdown(text) {
   out = out.replace(/\n{3,}/g, '\n\n').trim();
   return out;
 }
+
+const POSITIVE_KEYWORDS = /buy|add|köp|öka|consider adding|överväg att köpa|increase|bra för|rekommenderas|recommend/i;
+const NEGATIVE_KEYWORDS = /avoid|undvik|sell|sälj|limit|begränsa|minska|concentrated|smal exponering|för de flesta.*undvik/i;
+
+/**
+ * Split recommendation text into lines with a type for styling (positive=green, negative=red, neutral=dark grey).
+ * @param {string} text - Already stripped (plain) recommendation text
+ * @returns {Array<{ line: string, type: 'positive'|'negative'|'neutral', isList: boolean }>}
+ */
+export function getRecommendationLines(text) {
+  if (typeof text !== 'string') return [];
+  const lines = text.split('\n').map((s) => s.trim()).filter(Boolean);
+  return lines.map((line) => {
+    const isList = /^•\s/.test(line) || /^[-*]\s/.test(line);
+    const lower = line.toLowerCase();
+    let type = 'neutral';
+    if (POSITIVE_KEYWORDS.test(lower) && !NEGATIVE_KEYWORDS.test(lower)) type = 'positive';
+    else if (NEGATIVE_KEYWORDS.test(lower)) type = 'negative';
+    return { line, type, isList };
+  });
+}

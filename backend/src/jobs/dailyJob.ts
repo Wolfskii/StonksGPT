@@ -12,12 +12,21 @@ import { FINNHUB_MAX_SYMBOLS } from "../config/apiLimits.js";
 const RECENT_RECOMMENDATIONS_LIMIT = 3;
 const RECENT_NOTES_LIMIT = 10;
 
-export async function runDailyJob(): Promise<{ ok: true } | { ok: false; error: string }> {
+const RISK_DESCRIPTIONS: Record<number, string> = {
+  1: "Very conservative – capital preservation, minimal volatility",
+  2: "Conservative – low risk, some growth",
+  3: "Moderate – balanced risk and return",
+  4: "Growth – higher risk for higher long-term return",
+  5: "Aggressive – highest risk tolerance, maximum growth focus",
+};
+
+export async function runDailyJob(riskLevel?: number): Promise<{ ok: true } | { ok: false; error: string }> {
   const dateStr = new Date().toISOString().slice(0, 10);
+  const risk = riskLevel != null && riskLevel >= 1 && riskLevel <= 5 ? riskLevel : 3;
 
   const [run] = await db
     .insert(dailyRuns)
-    .values({ status: "running", inputSnapshot: { symbols: [], date: dateStr } })
+    .values({ status: "running", inputSnapshot: { symbols: [], date: dateStr, riskLevel: risk } })
     .returning();
 
   if (!run) return { ok: false, error: "Failed to create run" };
@@ -86,9 +95,12 @@ export async function runDailyJob(): Promise<{ ok: true } | { ok: false; error: 
         ? recentNotes.map((n) => `- ${n.noteDate ? n.noteDate.toISOString().slice(0, 10) + ": " : ""}${n.content}`).join("\n")
         : "(No manual notes)";
 
+    const riskDesc = RISK_DESCRIPTIONS[risk] ?? RISK_DESCRIPTIONS[3];
     const prompt = `You are a long-term investing assistant. Focus on multi-year horizons; avoid day-trading or short-term tips.
 
 Today's date: ${dateStr}
+
+User's risk tolerance (1–5, 1=most conservative, 5=most aggressive): ${risk}. ${riskDesc}. Tailor your recommendation to this level: at 1–2 prefer stable, diversified index funds and avoid volatile or single-country bets; at 4–5 you may suggest more growth-oriented or regional tilts while still emphasizing long-term diversification.
 
 Current quotes for symbols considered (user watchlist + suggested broad markets):
 ${quoteLines}
@@ -127,6 +139,7 @@ IMPORTANT – output in two languages: First write the full recommendation in En
         inputSnapshot: {
           symbols: symbolsForQuotes.map((s) => s.symbol),
           date: dateStr,
+          riskLevel: risk,
         },
       })
       .where(eq(dailyRuns.id, run.id));
@@ -138,7 +151,7 @@ IMPORTANT – output in two languages: First write the full recommendation in En
       .update(dailyRuns)
       .set({
         status: "error",
-        inputSnapshot: { symbols: [], date: dateStr, error: message },
+        inputSnapshot: { symbols: [], date: dateStr, error: message, riskLevel: risk },
       })
       .where(eq(dailyRuns.id, run.id));
     return { ok: false, error: message };

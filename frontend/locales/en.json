@@ -14,7 +14,13 @@
     "latestRecommendation": "Latest recommendation",
     "noRecommendation": "No recommendation yet. Run the daily job to get suggestions (S&P 500, World, Europe, Sweden, etc.) even with an empty watchlist.",
     "recentRuns": "Recent runs",
-    "runJob": "Run daily job"
+    "runJob": "Run daily job",
+    "riskLabel": "Risk tolerance",
+    "risk1": "Very conservative",
+    "risk2": "Conservative",
+    "risk3": "Moderate",
+    "risk4": "Growth",
+    "risk5": "Aggressive"
   },
   "notes": {
     "title": "Manual notes",

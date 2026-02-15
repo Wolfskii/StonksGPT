@@ -191,9 +191,10 @@ app.delete("/api/runs/:id", async (req, res) => {
   }
 });
 
-/** Trigger daily job. Without API keys we store a placeholder run + recommendation. */
-app.post("/api/jobs/daily", async (_req, res) => {
+/** Trigger daily job. Without API keys we store a placeholder run + recommendation. Body: { riskLevel?: 1-5 }. */
+app.post("/api/jobs/daily", async (req, res) => {
   try {
+    const riskLevel = req.body?.riskLevel != null ? parseInt(String(req.body.riskLevel), 10) : undefined;
     if (!canRunRecommendations()) {
       const [run] = await db
         .insert(dailyRuns)
@@ -213,7 +214,7 @@ app.post("/api/jobs/daily", async (_req, res) => {
       return res.json({ ok: true, message: "Placeholder saved; configure API keys for real recommendations." });
     }
 
-    const result = await runDailyJob();
+    const result = await runDailyJob(Number.isFinite(riskLevel) ? riskLevel : undefined);
     return res.json(result);
   } catch (e) {
     res.status(500).json({ ok: false, error: toErrorMessage(e) });

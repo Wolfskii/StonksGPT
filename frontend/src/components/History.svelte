@@ -1,6 +1,6 @@
 <script>
   import { t, locale } from '$lib/i18n/index.js';
-  import { stripRecommendationMarkdown } from '$lib/stripMarkdown.js';
+  import { stripRecommendationMarkdown, getRecommendationLines } from '$lib/stripMarkdown.js';
   import * as api from '$lib/api.js';
 
   let runs = $state([]);
@@ -112,7 +112,11 @@
   <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-content">
       <h3>{t('dashboard.latestRecommendation')} — {t('history.runNumber')}{viewingRunId}</h3>
-      <div class="recommendation">{stripRecommendationMarkdown($locale === 'sv' && viewingRec.fullOutputSv ? viewingRec.fullOutputSv : viewingRec.fullOutput)}</div>
+      <div class="recommendation">
+        {#each getRecommendationLines(stripRecommendationMarkdown($locale === 'sv' && viewingRec.fullOutputSv ? viewingRec.fullOutputSv : viewingRec.fullOutput)) as item, i (i)}
+          <div class="rec-line {item.type}" class:rec-list-item={item.isList}>{item.line}</div>
+        {/each}
+      </div>
       <button type="button" onclick={closeView}>{t('common.back')}</button>
     </div>
   </div>
@@ -202,12 +206,20 @@
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   }
   .modal-content .recommendation {
-    white-space: pre-wrap;
     font-size: 0.95rem;
     margin: 1rem 0;
     max-height: 40vh;
     overflow-y: auto;
   }
+  .modal-content .rec-line {
+    line-height: 1.65;
+    margin-bottom: 0.5em;
+    color: #333;
+  }
+  .modal-content .rec-line.positive { color: #0a6b0a; }
+  .modal-content .rec-line.negative { color: #c00; }
+  .modal-content .rec-line.neutral { color: #333; }
+  .modal-content .rec-line.rec-list-item { padding-left: 1.25rem; }
   .modal-content button {
     padding: 0.5rem 1rem;
     cursor: pointer;

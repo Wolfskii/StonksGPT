@@ -1,10 +1,12 @@
 <script>
   import { t, locale } from '$lib/i18n/index.js';
-  import { stripRecommendationMarkdown } from '$lib/stripMarkdown.js';
+  import { stripRecommendationMarkdown, getRecommendationLines } from '$lib/stripMarkdown.js';
+  import { getRiskFromStorage, setRiskInStorage, RISK_LEVELS } from '$lib/risk.js';
   import * as api from '$lib/api.js';
 
   let latest = $state(null);
   let runs = $state([]);
+  let risk = $state(getRiskFromStorage());
 
   const recommendationText = $derived.by(() => {
     if (!latest) return '';
@@ -12,6 +14,7 @@
     const raw = ($locale === 'sv' && latest?.fullOutputSv) ? latest.fullOutputSv : (latest?.fullOutput ?? '');
     return stripRecommendationMarkdown(raw);
   });
+  const recommendationLines = $derived.by(() => getRecommendationLines(recommendationText));
   const hasRecommendation = $derived.by(() => {
     if (!latest) return false;
     return Boolean(latest.fullOutput || latest.fullOutputSv);
@@ -19,6 +22,11 @@
   let loading = $state(true);
   let jobRunning = $state(false);
   let jobError = $state(null);
+
+  function setRisk(level) {
+    risk = level;
+    setRiskInStorage(level);
+  }
 
   async function load() {
     loading = true;
@@ -38,7 +46,7 @@
     jobRunning = true;
     jobError = null;
     try {
-      const result = await api.runDailyJob();
+      const result = await api.runDailyJob(risk);
       if (result?.ok === false && result?.error) {
         jobError = result.error;
       } else {
@@ -62,21 +70,41 @@
   {#if loading}
     <p class="muted">{t('common.loading')}</p>
   {:else}
+    <div class="risk-section">
+      <span class="risk-label">{t('dashboard.riskLabel')}</span>
+      <div class="risk-slider" role="group" aria-label={t('dashboard.riskLabel')}>
+        <div class="risk-track">
+          {#each RISK_LEVELS as level (level)}
+            <button
+              type="button"
+              class="risk-stop"
+              class:active={risk === level}
+              onclick={() => setRisk(level)}
+              title={t('dashboard.risk' + level)}
+            >
+              <span class="risk-dot"></span>
+            </button>
+          {/each}
+        </div>
+        <p class="risk-desc">{t('dashboard.risk' + risk)}</p>
+      </div>
+    </div>
+
     <div class="latest">
       <h3>{t('dashboard.latestRecommendation')}</h3>
       {#if hasRecommendation}
-        <div class="recommendation">{recommendationText}</div>
+        <div class="recommendation">
+          {#each recommendationLines as item, i (i)}
+            <div class="rec-line {item.type}" class:rec-list-item={item.isList}>{item.line}</div>
+          {/each}
+        </div>
       {:else}
         <p class="muted">{t('dashboard.noRecommendation')}</p>
       {/if}
     </div>
 
     <div class="actions">
-      <button
-        type="button"
-        disabled={jobRunning}
-        onclick={runJob}
-      >
+      <button type="button" disabled={jobRunning} onclick={() => runJob()}>
         {jobRunning ? t('common.loading') : t('dashboard.runJob')}
       </button>
     </div>
@@ -104,9 +132,54 @@
 
 <style>
   .dashboard { margin-top: 1rem; }
+  .risk-section { margin-bottom: 1.5rem; }
+  .risk-label { display: block; font-size: 0.9rem; color: #555; margin-bottom: 0.5rem; }
+  .risk-slider { max-width: 28rem; }
+  .risk-track {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+  }
+  .risk-track::before {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    right: 0.75rem;
+    top: 50%;
+    height: 4px;
+    background: #ddd;
+    border-radius: 2px;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  .risk-stop {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  .risk-dot {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: #bbb;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px #999;
+    transition: background 0.15s;
+  }
+  .risk-stop:hover .risk-dot { background: #888; }
+  .risk-stop.active .risk-dot {
+    background: var(--accent, #333);
+    box-shadow: 0 0 0 2px var(--accent, #333);
+  }
+  .risk-desc { margin: 0.35rem 0 0 0; font-size: 0.85rem; color: #666; }
   .latest { margin-bottom: 1.5rem; }
   .recommendation {
-    white-space: pre-wrap;
     background: var(--bg-secondary, #f5f5f5);
     padding: 1rem;
     border-radius: 8px;
@@ -114,6 +187,15 @@
     max-height: 20rem;
     overflow-y: auto;
   }
+  .rec-line {
+    line-height: 1.65;
+    margin-bottom: 0.5em;
+    color: #333;
+  }
+  .rec-line.positive { color: #0a6b0a; }
+  .rec-line.negative { color: #c00; }
+  .rec-line.neutral { color: #333; }
+  .rec-line.rec-list-item { padding-left: 1.25rem; }
   .actions { margin-bottom: 1rem; }
   .actions button {
     padding: 0.5rem 1rem;
