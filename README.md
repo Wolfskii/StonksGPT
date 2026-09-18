@@ -1,12 +1,12 @@
 # StonksGPT
 
-Daily stock and fund recommendations for long-term investing. The app runs a **daily job** that pulls market data and news, combines them with your watchlist and any notes you add, and asks an AI for buy/sell/hold advice. Everything is stored in the **database** so your history and context survive redeploys (e.g. on Dokploy).
-
 <p>
   <a href="https://www.buymeacoffee.com/wolfskii">
     <img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=&slug=wolfskii&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" alt="Buy me a coffee" />
   </a>
 </p>
+
+Daily stock and fund recommendations for long-term investing. The app runs a **daily job** that pulls market data and news, combines them with your watchlist and any notes you add, and asks an AI for buy/sell/hold advice. Everything is stored in the **database** so your history and context survive redeploys (e.g. on Dokploy).
 
 ## How it works
 
